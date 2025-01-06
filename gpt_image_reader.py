@@ -1,3 +1,4 @@
+#From https://platform.openai.com/docs/guides/vision/overview
 #This sends an image to chat gpt and asks it to describe the image. 
 import openai
 import base64
@@ -8,66 +9,13 @@ import os
 
 load_dotenv()
 
-print(os.getenv("test_key"))
+import base64
+from openai import OpenAI
 
-#OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-# Set your OpenAI API key
+print("")
+print("-------------")
 
-
-
-
-image_path = "C:/Users/kahin/Downloads/16-af0075cl_1735282644.png"
-with open(image_path, 'rb') as image_file:
-    encoded_image = base64.b64encode(image_file.read()).decode()
-
-
-model = "gpt-4o-mini"
-prompt = "Tell me a joke"
-
-client = openai.OpenAI(api_key=os.getenv("API_KEY"))
-OpenAI.api_key = os.getenv("API_KEY")
-
-
-print("Starting to send image to chat gpt")
-
-#Add the image content to payload
-#The response says that there are too many tokens needed to process the image.
-
-#response= client.chat.completions.create(
-#    model=model,
-#    messages=[
-#        {"role": "system", "content": "what is this image."},
-#        {"role": "user", "content": prompt},
-#        {"role": "user", "content": encoded_image},
-#        {"max_tokens": 40000},
-#    ]
-#)
-
-
-# Extract and return the response content
-#print(response.choices[0].message.content.strip())
-
-"""
-
-
-# Load the image
-with open(image_path, "rb") as image_file:
-    response = client.chat.completions.create(
-        model="gpt-4-vision",
-        messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": "What do you see in this image?"}
-        ],
-        files={"image": image_file}
-    )
-
-
-# Display the response
-print(response['choices'][0]['message']['content'])
-"""
-
-
-
+client = OpenAI(api_key=os.getenv("API_KEY"))
 
 # Function to encode the image
 def encode_image(image_path):
@@ -75,11 +23,14 @@ def encode_image(image_path):
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
+# Path to your image
+image_path = "16-af0075cl_1735282644.png"
+
 # Getting the base64 string
 base64_image = encode_image(image_path)
 
 response = client.chat.completions.create(
-    model="gpt-4-vision-preview",
+    model="gpt-4o-mini",
     messages=[
         {
             "role": "user",
