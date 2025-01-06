@@ -1,6 +1,6 @@
 #Claude 3.5 Sonnet with Bedrock and images
 #https://medium.com/@codingmatheus/sending-images-to-claude-3-using-amazon-bedrock-b588f104424f
-import base64
+import base64 
 import json
 import boto3
 
