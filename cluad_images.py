@@ -14,7 +14,7 @@ with open(image_path,"rb") as image_file:
 
 
 #Define the payload
-payload={
+payload={ 
     "messages":[
         {
             "role":"user",
