@@ -1,7 +1,7 @@
 #This sends an image to chat gpt and asks it to describe the image. 
 from key import API_KEY
 import openai
-import base64
+import base64  
 
 
 image_path = "C:/Users/kahin/Downloads/16-af0075cl_1735282644.png"
