@@ -15,21 +15,58 @@ import pyautogui
 print("Connecting to DynamoDB")
 dynamodb = boto3.resource('dynamodb', region_name='us-west-1')
 table = dynamodb.Table('products')
+price_tracker_table = dynamodb.Table('price_tracker')
 #Connect to S3
 s3=boto3.client('s3',region_name='us-west-1')
 
 #Scan the table to get all items
 
-#If there are more items (pagination), keep scanning
-while 'LastEvaluatedKey' in response:
-    response = table.scan(ExclusiveStartKey=response['LastEvaluatedKey'])
-    products.extend(response['Items'])
+
 
 # Moved the printing loop outside of the while loop
 print("\nPrinting all products:")  # Debug print
 
 # *************** Main loop ***************
 
+#Given a list of products, take a screenshot of each product and save it to S3
+
+
+def take_screenshot(product_name, product_url, product_channel):
+    # Add timestamp to filename to make it unique
+    #The timestamp is used as a unique id and will help searching the S3 bucket for the screenshot.
+    timestamp = int(time.time())
+    unique_filename = f"{timestamp}_{product_name}_{product_channel}"
+    
+    # Fix string syntax for the command
+    command = f'start msedge "{product_url}"'
+    
+    subprocess.run(command, shell=True)
+    time.sleep(5)
+    try:
+        screenshot = pyautogui.screenshot()
+        print(f"Taking screenshot for {product_name}")
+        # Save screenshot to a temporary file
+        local_path = f"C:/Users/kahin/Downloads/{unique_filename}.png"
+        screenshot.save(local_path)
+        return timestamp, unique_filename, local_path
+    except Exception as e:
+        print(f"Error processing {product_name}: {str(e)}")
+        return None, None, None
+
+
+#This takes the image and image name and uploads it to S3
+def upload_screenshot_to_s3(temp_image_name, local_path):
+    try:
+        s3.upload_file(local_path, 'vendor-images-storage', f"{temp_image_name}.png")
+        # Clean up local file after upload
+        os.remove(local_path)
+    except Exception as e:
+        print(f"Error uploading to S3: {str(e)}")
+
+
+
+"""
+#Old loop that is replicated in function above.
 for product in products:
     temp_product_name = product['product_name']
     temp_url = product['url']
@@ -61,14 +98,33 @@ for product in products:
     except Exception as e:
         print(f"Error processing {temp_product_name}: {str(e)}")
 
-
+"""
 
 def get_list_of_products():
     response = table.scan()
-    temp_products = response['Items']
-    print(f"Initial scan found {len(temp_products)} items")  # Debug print
-    return temp_products
+    return response['Items']
 
+
+def write_new_record_to_price_tracker(timestamp, channel, image_name, list_price, product_name, sale_amount, sale_price, url):
+    #Convert the timestamp to a string
+    timestamp_str = str(timestamp)
+    try:
+        price_tracker_table.put_item(
+            Item={
+                'pacific_datetime': timestamp_str,
+                'channel': channel,
+                'image_name': image_name,
+                'list_price': list_price,
+                'product': product_name,
+                'sale_amount': sale_amount,
+                'sale_price': sale_price,
+                'url': url
+            }
+        )
+        return True
+    except Exception as e:
+        print(f"Error writing to DynamoDB: {str(e)}")
+        return False
 
 
 #******************** Main ***********************
@@ -80,7 +136,33 @@ def main():
     print("Starting Test")
     print("Getting list of products from DynamoDB")
     products = get_list_of_products()
+
+    
     for product in products:
         print(product['product_name'])
+        #Take a screenshot of the product
+        timestamp,temp_image_name, temp_image = take_screenshot(product['product_name'], product['url'], product['channel'])
+        #Upload the screenshot to S3
+        upload_screenshot_to_s3(temp_image_name, temp_image)
+        #Write a new record to the DynamoDB table
+        sale_amount = 200
+        sale_price = 100
+        list_price = 800
+        write_new_record_to_price_tracker(timestamp, product['product_name'], product['channel'], temp_image_name, list_price, sale_amount, sale_price, product['url'])
+     
+        print("New record written to DynamoDB")
 
+
+        
+#Dummy values while waiting for the sale price and amount.
+    timestamp = int(time.time())
+    product_name = "Test Product"
+    channel = "Test Channel"
+    image_name = "Test Image"
+    sale_amount = 200
+    sale_price = 100
+    list_price = 800
+    url = "https://www.google.com"
+    #write_new_record_to_dynamodb(timestamp, product_name, channel, image_name, list_price, sale_amount, sale_price, url)
+        
 if __name__ == "__main__": main()
