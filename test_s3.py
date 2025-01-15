@@ -1,6 +1,7 @@
 import boto3
 from boto3.session import Session
 
+
 s4=boto3.client('s3',region_name='us-west-1')
 
 # Create a session with your credentials from cli
