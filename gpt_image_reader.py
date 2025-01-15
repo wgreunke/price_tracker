@@ -22,7 +22,7 @@ client = OpenAI(api_key=os.getenv("API_KEY"))
 def encode_image(image_path):
     with open(image_path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
-
+ 
 
 # Path to your image
 image_path = "16-af0075cl_1735282644.png"
