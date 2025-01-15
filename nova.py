@@ -1,7 +1,7 @@
 #Having problems with the image.
 #First it asks for a toolType, then when I include that it says that source is not a valid type.  
 # Going to try using gpt to get things going. 
-
+ 
 
 # Use the native inference API to send a text message to Amazon Titan Text.
 
