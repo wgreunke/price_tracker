@@ -8,6 +8,7 @@ import os
 import time
 import subprocess
 import pyautogui
+from datetime import datetime
 
 
 
@@ -109,6 +110,8 @@ def write_new_record_to_price_tracker(timestamp, channel, image_name, list_price
     #Convert the timestamp to a string
     timestamp_str = str(timestamp)
     try:
+        #Automatically get the date from the timestamp
+        date = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
         price_tracker_table.put_item(
             Item={
                 'pacific_datetime': timestamp_str,
@@ -118,7 +121,8 @@ def write_new_record_to_price_tracker(timestamp, channel, image_name, list_price
                 'product': product_name,
                 'sale_amount': sale_amount,
                 'sale_price': sale_price,
-                'url': url
+                'url': url,
+                'date': date
             }
         )
         return True
@@ -148,7 +152,17 @@ def main():
         sale_amount = 200
         sale_price = 100
         list_price = 800
-        write_new_record_to_price_tracker(timestamp, product['product_name'], product['channel'], temp_image_name, list_price, sale_amount, sale_price, product['url'])
+        #Explicitly pass the values to the function
+        write_new_record_to_price_tracker(
+            timestamp= timestamp, 
+            product_name=product['product_name'], 
+            channel=product['channel'], 
+            image_name=temp_image_name, 
+            list_price=list_price, 
+            sale_amount=sale_amount, 
+            sale_price=sale_price, 
+            url=product['url']
+        )
      
         print("New record written to DynamoDB")
 

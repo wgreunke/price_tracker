@@ -65,13 +65,13 @@ response = client.chat.completions.create(
 
 
 
-print(response.choices[0])
+#print(response.choices[0])
 
 
 
 #Once you have the responce, strip out the values and convert them to decimals.
 response_choice=response.choices[0]
-print(response_choice)
+#print(response_choice)
 
 
 # Simulating the response content
@@ -100,10 +100,82 @@ try:
     sale_price = convert_currency_to_decimal(root.find("sale_price").text)
     sale_amount = convert_currency_to_decimal(root.find("sale_amount").text)
 
-    # Print extracted data
+  
+except ET.ParseError as e:
+    print(f"Error parsing XML: {e}")
+
+
+
+#This function takes in an image, sends it to chat gpt, and returns the extracted data as a dictionary. 
+def get_price_data_from_openai(local_path):
+    base64_image = encode_image(local_path)
+
+    #Send the image to chat gpt and get the response
+    response = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text":(
+                          "This is a screenshot of a computer for sale. "
+                            "Please extract the following details: <model_number>, <list_price>, <sale_price>, <sale_amount>. "
+                            "Format the response as XML in the following structure:\n\n"
+                            "<details>\n"
+                            "  <model_number>...</model_number>\n"
+                            "  <list_price>...</list_price>\n"
+                            "  <sale_price>...</sale_price>\n"
+                            "  <sale_amount>...</sale_amount>\n"
+                            "</details>"
+                        ),
+                    },
+                    {
+                        "type": "image_url",
+                        "image_url": {"url": f"data:image/jpeg;base64,{base64_image}"},
+                    },
+                ],
+            }
+        ],
+    )
+    
+    #Call the model
+    xml_data = response.choices[0].message.content
+    
+    # Strip Markdown code block delimiters if present
+    if xml_data.startswith("```xml") and xml_data.endswith("```"):
+        xml_data = xml_data[6:-3].strip()  # Remove '```xml' at the start and '```' at the end
+
+    try:
+        # Parse the XML data
+        root = ET.fromstring(xml_data)
+
+        # Extract data from the XML
+        model_number = root.find("model_number").text
+        list_price = convert_currency_to_decimal(root.find("list_price").text)
+        sale_price = convert_currency_to_decimal(root.find("sale_price").text)
+        sale_amount = convert_currency_to_decimal(root.find("sale_amount").text)
+
+        
+    except ET.ParseError as e:
+        print(f"Error parsing XML: {e}")
+
+    return model_number, list_price, sale_price, sale_amount
+
+
+
+#******************** Main ***********************
+#This is the code to run for testing when run directly.
+def main(): 
+    print("This code is only executed when the file is run directly.") 
+    #Testing
+    print("Testing Results")
+    local_path="16-af0075cl_1735282644.png"
+    model_number, list_price, sale_price, sale_amount = get_price_data_from_openai(local_path)
     print(f"Model Number: {model_number}")
     print(f"List Price: {list_price}")
     print(f"Sale Price: {sale_price}")
     print(f"Sale Amount: {sale_amount}")
-except ET.ParseError as e:
-    print(f"Error parsing XML: {e}")
+    
+if __name__ == "__main__": main()
