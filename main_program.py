@@ -4,7 +4,8 @@ from dynamo_tools import take_screenshot
 from dynamo_tools import upload_screenshot_to_s3
 from dynamo_tools import write_new_record_to_price_tracker
 from dynamo_tools import get_list_of_products
-
+from gpt_image_reader import get_price_data_from_openai
+import os
 
 #Fetch the list of products and vendors from DynamoDB
 products = get_list_of_products()
@@ -17,14 +18,14 @@ for product in products:
     #For each product, load the url and take a screenshot of the page.
     timestamp,temp_image_name, temp_image = take_screenshot(product['product_name'], product['url'], product['channel'])
 
+
+
     #Save the screenshot to S3
     upload_screenshot_to_s3(temp_image_name, temp_image)
+    print(f"Temp Image: {temp_image}") 
 
     #Get the price data from openai
-    #Use dummy values for now
-    list_price = 800
-    sale_amount = 200
-    sale_price = 100
+    model_number, list_price, sale_price, sale_amount = get_price_data_from_openai(temp_image_name)
 
     #Write a new record to the DynamoDB table with the timestamp, product name, and product url.
     write_new_record_to_price_tracker(
@@ -38,6 +39,9 @@ for product in products:
         url=product['url']
     )
 
+#Once you have loaded the image, then delete the file from the local machine.
+os.remove(temp_image)
+
 
 #Save the screenshot to S3
 print("Testing the S3 connection by listing the images")
@@ -49,9 +53,4 @@ for image_item in images:
 
 
 
-#Send the screenshot to the model
-
-#Get the results from the model
-
-#Send the results to DynamoDB
 

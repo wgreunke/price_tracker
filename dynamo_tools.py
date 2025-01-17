@@ -59,8 +59,7 @@ def take_screenshot(product_name, product_url, product_channel):
 def upload_screenshot_to_s3(temp_image_name, local_path):
     try:
         s3.upload_file(local_path, 'vendor-images-storage', f"{temp_image_name}.png")
-        # Clean up local file after upload
-        os.remove(local_path)
+      
     except Exception as e:
         print(f"Error uploading to S3: {str(e)}")
 
