@@ -6,6 +6,7 @@ from dynamo_tools import write_new_record_to_price_tracker
 from dynamo_tools import get_list_of_products
 from gpt_image_reader import get_price_data_from_openai
 import os
+from decimal import Decimal
 
 #Fetch the list of products and vendors from DynamoDB
 products = get_list_of_products()
@@ -16,16 +17,21 @@ for product in products:
     print(product['channel'])
 
     #For each product, load the url and take a screenshot of the page.
-    timestamp,temp_image_name, temp_image = take_screenshot(product['product_name'], product['url'], product['channel'])
+    timestamp,temp_image_name, temp_image_path = take_screenshot(product['product_name'], product['url'], product['channel'])
 
 
 
     #Save the screenshot to S3
-    upload_screenshot_to_s3(temp_image_name, temp_image)
-    print(f"Temp Image: {temp_image}") 
+    upload_screenshot_to_s3(temp_image_name, temp_image_path)
+    print(f"Temp Image: {temp_image_path}") 
 
     #Get the price data from openai
-    model_number, list_price, sale_price, sale_amount = get_price_data_from_openai(temp_image_name)
+    model_number, list_price, sale_price, sale_amount = get_price_data_from_openai(temp_image_path)
+
+    # Convert float values to Decimal with rounding
+    list_price = Decimal(list_price).quantize(Decimal('0.01'))  # Round to 2 decimal places
+    sale_price = Decimal(sale_price).quantize(Decimal('0.01'))  # Round to 2 decimal places
+    sale_amount = Decimal(sale_amount).quantize(Decimal('0.01'))  # Round to 2 decimal places
 
     #Write a new record to the DynamoDB table with the timestamp, product name, and product url.
     write_new_record_to_price_tracker(
@@ -40,7 +46,7 @@ for product in products:
     )
 
 #Once you have loaded the image, then delete the file from the local machine.
-os.remove(temp_image)
+os.remove(temp_image_path)
 
 
 #Save the screenshot to S3
