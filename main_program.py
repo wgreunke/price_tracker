@@ -26,12 +26,27 @@ for product in products:
     print(f"Temp Image: {temp_image_path}") 
 
     #Get the price data from openai
-    model_number, list_price, sale_price, sale_amount = get_price_data_from_openai(temp_image_path)
+    try:
+        model_number, list_price, sale_price, sale_amount = get_price_data_from_openai(temp_image_path)
+    except ValueError as e:
+        print(f"Error retrieving price data: {e}")
+        list_price, sale_price, sale_amount = None, None, None  # Set to None or handle as needed
 
     # Convert float values to Decimal with rounding
-    list_price = Decimal(list_price).quantize(Decimal('0.01'))  # Round to 2 decimal places
-    sale_price = Decimal(sale_price).quantize(Decimal('0.01'))  # Round to 2 decimal places
-    sale_amount = Decimal(sale_amount).quantize(Decimal('0.01'))  # Round to 2 decimal places
+    if list_price is not None:
+        list_price = Decimal(list_price).quantize(Decimal('0.01'))  # Round to 2 decimal places
+    else:
+        list_price = None  # Handle as needed
+
+    if sale_price is not None:
+        sale_price = Decimal(sale_price).quantize(Decimal('0.01'))  # Round to 2 decimal places
+    else:
+        sale_price = None  # Handle as needed
+
+    if sale_amount is not None:
+        sale_amount = Decimal(sale_amount).quantize(Decimal('0.01'))  # Round to 2 decimal places
+    else:
+        sale_amount = None  # Handle as needed
 
     #Write a new record to the DynamoDB table with the timestamp, product name, and product url.
     write_new_record_to_price_tracker(

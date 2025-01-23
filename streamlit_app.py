@@ -1,9 +1,34 @@
 #This is a streamlit app that will allow the user to view the price tracker data.
-
 import streamlit as st
 import pandas as pd
+import boto3
+from botocore.exceptions import NoCredentialsError, ClientError
+import os
+from dotenv import load_dotenv
+
+#When running streamlit, use this in the command to get boto3 to work
+# C:/Python312/python.exe -m      streamlit run c:/Users/kahin/Documents/Python/price_tracker/streamlit_app.py  
+load_dotenv()
+
+aws_access_key_id = os.getenv('aws_access_key_id')
+aws_secret_access_key = os.getenv('aws_secret_access_key')
+
+#Connect to the S3 bucket
+s3 = boto3.client('s3', aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key)   
+#Get a list of all the files in the S3 bucket
+s3_objects = s3.list_objects_v2(Bucket='vendor-images-storage')  
+st.write(s3_objects)
+
+
+#Show this image from the S3 bucket 1737154609_17-cn4065cl_Costco.png
+image_key = '1737154609_17-cn4065cl_Costco.png'
+image_url = s3.generate_presigned_url('get_object', Params={'Bucket': 'vendor-images-storage', 'Key': image_key}, ExpiresIn=3600)
+st.image(image_url)
+
+
+
 #Load the price tracker data from csv
-price_tracker_data = pd.read_csv('sample_price_tracker.csv')
+price_tracker_data = pd.read_csv('results.csv')
 
 #Convert Unix timestamp to datetime only showing year month and day
 price_tracker_data['pacific_datetime2'] = pd.to_datetime(price_tracker_data['pacific_datetime'], unit='s').dt.date
@@ -31,4 +56,6 @@ filtered_data = price_tracker_data[price_tracker_data['product'] == product_name
 #Display the filtered price tracker data
 st.write(filtered_data)
 
+#Create a line chart of the sale price plotted against the date
+st.line_chart(filtered_data.set_index('pacific_datetime2')['sale_price'])  # Set the index to the date column
 

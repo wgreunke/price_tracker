@@ -36,6 +36,7 @@ def take_screenshot(product_name, product_url, product_channel):
     # Add timestamp to filename to make it unique
     #The timestamp is used as a unique id and will help searching the S3 bucket for the screenshot.
     timestamp = int(time.time())
+    #add .png to the end of the filename
     unique_filename = f"{timestamp}_{product_name}_{product_channel}"
     
     # Fix string syntax for the command
@@ -110,6 +111,8 @@ def write_new_record_to_price_tracker(timestamp, channel, image_name, list_price
     timestamp_str = str(timestamp)
     try:
         #Automatically get the date from the timestamp
+        #Add .png to the end of the image_name
+        image_name = f"{image_name}.png"
         date = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d')
         price_tracker_table.put_item(
             Item={
