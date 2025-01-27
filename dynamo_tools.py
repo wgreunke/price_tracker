@@ -10,6 +10,10 @@ import subprocess
 import pyautogui
 from datetime import datetime
 
+#Tips on pulling screenshots.
+#https://www.reddit.com/r/aws/comments/j4kmnq/how_do_i_get_graphics_output_from_my_ec2_instance/
+#Python options: https://screenshotone.com/blog/how-to-take-website-screenshots-in-python/ Selenium, Pyppeteer, Playwright
+
 
 
 #Connect to DynamoDB

@@ -41,6 +41,9 @@ dyanamo_response['Items'] = [
 #Convert the response to a pandas dataframe
 price_tracker_data = pd.DataFrame(dyanamo_response['Items'])
 
+#Create a max price from the entire data set
+price_tracker_data['list_price'] = price_tracker_data['list_price'].astype(float)
+max_price = float( price_tracker_data['list_price'].max())
 
 
 #Convert Unix timestamp to datetime only showing year month and day
@@ -88,7 +91,7 @@ plt.plot(filtered_data['pacific_datetime'], filtered_data['list_price'], label='
 plt.title('Sale Price and List Price Over Time')
 plt.xlabel('Date')
 plt.ylabel('Price')
-plt.ylim(0, filtered_data['sale_price'].max() + 10)  # Add some padding
+plt.ylim(0, max_price + 100)  # Add some padding
 plt.legend()
 plt.xticks(rotation=45)
 plt.tight_layout()
