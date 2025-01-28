@@ -34,7 +34,7 @@ dynamodb_connection = boto3.client('dynamodb', aws_access_key_id=aws_access_key_
 dyanamo_response = dynamodb_connection.scan(TableName='price_tracker')
 # Remove the 'S' and 'N' prefixes from the cell values
 dyanamo_response['Items'] = [
-    {k: (v['S'] if 'S' in v else v['N']) for k, v in item.items()} 
+    {k: (v['S'] if 'S' in v else v.get('N', None)) for k, v in item.items()} 
     for item in dyanamo_response['Items']
 ]
 
