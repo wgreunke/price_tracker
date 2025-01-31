@@ -67,7 +67,13 @@ products_overview = products_overview.sort_values(by='product')
 st.write("Products Overview")
 # Show the products overview with clickable links for URLs
 products_overview['url'] = products_overview['url'].apply(lambda x: f'<a href="{x}" target="_blank">Go to Site</a>')
-st.markdown(products_overview.to_html(escape=False), unsafe_allow_html=True)  # Display the table with clickable links
+
+# Add CSS to center and bold the header
+styled_table = products_overview.to_html(escape=False)
+styled_table = styled_table.replace('<thead>', '<thead style="font-weight: bold; text-align: center;">')
+styled_table = styled_table.replace('<table>', '<table style="margin-left: auto; margin-right: auto;">')
+
+st.markdown(styled_table, unsafe_allow_html=True)  # Display the table with clickable links
 
 
 
