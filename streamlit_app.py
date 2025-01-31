@@ -8,6 +8,8 @@ from dotenv import load_dotenv
 import matplotlib.pyplot as plt
 
 
+#When running streamlit, use this in the command to get boto3 to work
+# C:/Python312/python.exe -m      streamlit run c:/Users/kahin/Documents/Python/price_tracker/streamlit_app.py
 
 
 #Notes:
@@ -16,9 +18,6 @@ import matplotlib.pyplot as plt
 
 
 
-
-#When running streamlit, use this in the command to get boto3 to work
-# C:/Python312/python.exe -m      streamlit run c:/Users/kahin/Documents/Python/price_tracker/streamlit_app.py  
 load_dotenv()
 
 aws_access_key_id = os.getenv('aws_access_key_id')
@@ -49,24 +48,40 @@ max_price = float( price_tracker_data['list_price'].max())
 #Convert Unix timestamp to datetime only showing year month and day
 price_tracker_data['year_month_day'] = pd.to_datetime(price_tracker_data['pacific_datetime'], unit='s').dt.date
 
+#Order the data by the year_month_day column descending
+price_tracker_data = price_tracker_data.sort_values(by='year_month_day', ascending=False)
+
 #put the datetime column in the first position
 price_tracker_data = price_tracker_data[['year_month_day','pacific_datetime', 'product', 'channel', 'list_price', 'sale_amount', 'sale_price', 'url', 'image_name']]
 
 #Sort the data by the pacific_datetime2 column
 price_tracker_data = price_tracker_data.sort_values(by='pacific_datetime')
 
-#st.write("modified table")
-#st.write(price_tracker_data)
+
+
+#Generate a list of all the products and then show a table that has the lattest sales price and list price for each product
+#Sort by product name
+#Show the url for the product.  Also in the table, make the url a clickable link.
+products_overview = price_tracker_data[['product', 'sale_price', 'list_price', 'sale_amount', 'url']].drop_duplicates(subset='product')
+products_overview = products_overview.sort_values(by='product')
+st.write("Products Overview")
+# Show the products overview with clickable links for URLs
+products_overview['url'] = products_overview['url'].apply(lambda x: f'<a href="{x}" target="_blank">Go to Site</a>')
+st.markdown(products_overview.to_html(escape=False), unsafe_allow_html=True)  # Display the table with clickable links
+
+
 
 
 # Add ability to filter by product name (update the column name to match your actual data)
 # You'll need to replace 'product_name' with the actual column name from your CSV
-product_name = st.selectbox('Select a product', price_tracker_data['product'].unique())  # assuming the column is called 'name'
-
-
+product_name = st.selectbox('Select a product', sorted(price_tracker_data['product'].unique()))  # assuming the column is called 'name'
+#sort product_name by the product column
 
 
 filtered_data = price_tracker_data[price_tracker_data['product'] == product_name]  # make sure to use the same column name here
+
+#order the filtered data by the pacific_datetime column descending
+filtered_data = filtered_data.sort_values(by='pacific_datetime', ascending=False)
 
 #Display the filtered price tracker data
 st.write("Filtered Data")
@@ -83,8 +98,11 @@ filtered_data['list_price'] = filtered_data['list_price'].astype(float)
 plt.figure(figsize=(10, 6))
 
 # Plot lines
-plt.plot(filtered_data['pacific_datetime'], filtered_data['sale_price'], label='Sale Price')
-plt.plot(filtered_data['pacific_datetime'], filtered_data['list_price'], label='List Price')
+#Show the x axis as a year month day
+
+
+plt.plot(filtered_data['year_month_day'], filtered_data['sale_price'], label='Sale Price')
+plt.plot(filtered_data['year_month_day'], filtered_data['list_price'], label='List Price')
 
 
 # Customize plot
